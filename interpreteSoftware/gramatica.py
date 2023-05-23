@@ -1,25 +1,19 @@
-import ply.yacc as yacc
 import ply.lex as lex
-import os
-import codecs
-import re
 
-#lexer
-resultado_lexer = []
-
-palabrasReservadas = (
-    "ver", #print
-    "obt", #input
-    "es", #if
-    "deloc", #else
-    "yy", #and
-    "oo", #or
-    "negar", #not
-    "repetir", #whie, for
-    "func", #def
-    "fin", #break
-    "devol" #return
-)
+palabrasReservadas = {
+    "ver": "print",  # print
+    "obt": "input",  # input
+    "es": "if",  # if
+    "deloc": "else",  # else
+    "yy": "and",  # and
+    "oo": "or",  # or
+    "negar": "not",  # not
+    "ciclom": "while",  # while
+    "ciclop": "for",  # for
+    "func": "def",  # def
+    "fin": "break",  # break
+    "devol": "return"  # return
+}
 
 literales = (
     "CIERTO",
@@ -27,222 +21,179 @@ literales = (
 )
 
 tiposDeToken = (
-    "IDENTIFICADOR",
+    "ID",
     "PALABRA_RESERVADA",
     "LITERAL"
 )
 
-tokens = literales + tiposDeToken + (
-    "IMPRIMIR",
-    "LEER",
-    "SI",
-    "SINO",
-    "Y",
-    "O",
-    "NEGAR",
-    "MIESTRAS",
-    "FUNCION",
-    "BREAK",
-    "RETORNAR",
+tokens = [
+    'ID',
+    'IMPRIMIR',
+    'LEER',
+    'SI',
+    'SINO',
+    'Y',
+    'O',
+    'NEGAR',
+    'MIESTRAS',
+    'FUNCION',
+    'BREAK',
+    'RETORNAR',
+    'REVALUAR',
+    'PARIZQ',
+    'PARDER',
+    'CORIZQ',
+    'CORDER',
+    'MAS',
+    'MENOS',
+    'POR',
+    'DIVIDIDO',
+    'DECIMAL',
+    'ENTERO',
+    'PTCOMA',
+    'MENOR',
+    'MAYOR',
+    'MENORIGUAL',
+    'MAYORIGUAL',
+    'IGUAL',
+    'ASIGNACION',
+    'DISTINTO',
+    'IDENTIFICADOR'
+] + list(palabrasReservadas.values())
 
-    "ENTERO",
-    "CADENA",
-    "NUMERAL",
 
-    "SUMA",
-    "RESTA",
-    "MULTIPLICACION",
-    "DIVISION",
-    "MODULO",
-    "POTENCIA",
+# Tokens
+t_REVALUAR = r'Evaluar'
+t_PARIZQ = r'\('
+t_PARDER = r'\)'
+t_CORIZQ = r'\['
+t_CORDER = r'\]'
+t_MAS = r'\+'
+t_MENOS = r'-'
+t_POR = r'\*'
+t_DIVIDIDO = r'/'
+t_PTCOMA = r';'
+t_MENOR = r'<'
+t_MAYOR = r'>'
+t_MENORIGUAL = r'<='
+t_MAYORIGUAL = r'>='
+t_IGUAL = r'=='
+t_ASIGNACION = r'='
+t_DISTINTO = r'!='
 
-    "ASIGNACION",
-    "IGUAL",
-    "DIFERENTE",
-    "MENOR_IGUAL",
-    "MAYOR_IGUAL",
-    "MENOR_QUE",
-    "MAYOR_QUE",
-    "PUNTO_COMA",
-    "COMA",
-    "PARENTESIS_IZQUIERDO",
-    "PARENTESIS_DERECHO",
-    "CORCHETE_IZQUIERDO",
-    "CORCHETE_DERECHO",
-    "LLAVE_IZQUIERDA",
-    "LLAVE_DERECHA",
-    "BACKSLASH",
-    "COMILLA_DOBLE",
-    "COMILLA_SIMPLE"
-)
-
-t_SUMA = r'\+'
-t_RESTA = r'-'
-t_MULTIPLICACION = r'\*'
-t_DIVISION = r'/'
-t_MODULO = r'\%'
-t_POTENCIA = r'(\*{2} | \^)'
-
-t_ASIGNACION = r'\:\:'
-t_NUMERAL = r'\#'
-
-t_MENOR_QUE = r'\<\<'
-t_MAYOR_QUE = r'\>\>'
-t_PUNTO_COMA = ';'
-t_COMA = r','
-t_PARENTESIS_IZQUIERDO = r'\('
-t_PARENTESIS_DERECHO = r'\)'
-t_CORCHETE_IZQUIERDO = r'\['
-t_CORCHETE_DERECHO = r'\]'
-t_LLAVE_IZQUIERDA = r'{'
-t_LLAVE_DERECHA = r'}'
-t_BACKSLASH = r'\\'
-t_COMILLA_SIMPLE = r'\''
-t_COMILLA_DOBLE = r'\"'
 
 def t_IMPRIMIR(t):
     r'ver'
     return t
 
+
 def t_LEER(t):
     r'obt'
     return t
+
 
 def t_SI(t):
     r'es'
     return t
 
+
 def t_SINO(t):
     r'deloc'
     return t
+
 
 def t_Y(t):
     r'yy'
     return t
 
+
 def t_O(t):
     r'oo'
     return t
 
+
 def t_NEGAR(t):
-    r'neg'
+    r'negar'
     return t
+
 
 def t_MIESTRAS(t):
-    r'repetir'
+    r'ciclom'
     return t
 
+
 def t_FUNCION(t):
-    r'func'
+    r'ciclop'
     return t
+
 
 def t_BREAK(t):
     r'fin'
     return t
 
+
 def t_RETORNAR(t):
     r'devol'
     return t
 
+
+def t_DECIMAL(t):
+    r'\d+\.\d+'
+    try:
+        t.value = float(t.value)
+    except ValueError:
+        print("Valor flotante demasiado grande %d", t.value)
+        t.value = 0
+    return t
+
+
 def t_ENTERO(t):
     r'\d+'
-    t.value = int(t.value)
+    try:
+        t.value = int(t.value)
+    except ValueError:
+        print("Valor entero demasiado grande %d", t.value)
+        t.value = 0
     return t
 
-def t_IDENTIFICADOR(t):
-    r'\w+(_\d\w)*'
-    if t.value in literales:
-        t.type = 'LITERAL'
-    elif t.value.lower() in palabrasReservadas:
-        invalido(t,'Es una palabra reservada')
-        return
 
-    return t
+# Caracteres ignorados
+t_ignore = " \t"
 
-def t_CADENA(t):
-   r'\"?(\w+ \ *\w*\d* \ *)\"?'
-   return t
-
-def t_MENOR_IGUAL(t):
-    r'<::'
-    return t
-
-def t_MAYOR_IGUAL(t):
-    r'>::'
-    return t
-
-def t_IGUAL(t):
-    r':::'
-    return t
-
-def t_DIFERENTE(t):
-    r':-:'
-    return t
 
 def t_newline(t):
     r'\n+'
-    t.lexer.lineno += len(t.value)
+    t.lexer.lineno += t.value.count("\n")
 
-def t_comments(t):
-    r'\*\*\*(.|\n)*?\*\*\*'
-    t.lexer.lineno += t.value.count('\n')
-    #print("Linea %d inicia comentario de multiples lineas"%(t.lineno))
-
-def t_comments_ONELine(t):
-    r'\*\*(.)*\n'
-    t.lexer.lineno += 1
-    #print("Linea %d comentario"%(t.lineno))
-
-t_ignore =' \t'
 
 def t_error(t):
-    global resultado_lexer
-    mensaje = "Linea %d -> Token %r invalido." % (t.lineno, str(t.value)[0])
-    print(mensaje, "\n")
-    resultado_lexer.append(mensaje)
+    print("Caracter invalido '%s'" % t.value[0])
     t.lexer.skip(1)
 
-def invalido(t, arg='Error Indefinido'):
-    global resultado_lexer
-    mensaje = "Linea %d -> Token %r invalido." % (t.lineno, t.value)
-    if arg : mensaje.append(". Descripcion del error: "+arg)
-    print(mensaje,"\n")
-    resultado_lexer.append(mensaje)
 
-#parser
-resultado_parser = []
-parser_log = []
-variables = {}
+# Construyendo el analizador léxico
+lexer = lex.lex()
 
+
+# Asociación de operadores y precedencia
 precedence = (
-    ('right', 'ASIGNACION'),
-    ('left', 'IGUAL', 'DIFERENTE'),
-    ('left', 'MAYOR_QUE', 'MAYOR_IGUAL', 'MENOR_QUE', 'MENOR_IGUAL'),
-    ('left', 'SUMA', 'RESTA'),
-    ('left', 'MULTIPLICACION', 'DIVISION', 'MODULO'),
-    ('left', 'NEGAR'),
-    ('left', 'POTENCIA'),
-    ('right', 'NEGATIVO'),
+    ('left', 'MAS', 'MENOS'),
+    ('left', 'POR', 'DIVIDIDO'),
+    ('left', 'MENOR', 'MAYOR', 'MENORIGUAL', 'MAYORIGUAL', 'IGUAL', 'DISTINTO', 'ASIGNACION'),
+    ('right', 'UMENOS'),
 )
 
-def p_declaracionAsignacion(t):
-    'declaracion : IDENTIFICADOR ASIGNACION expresion PUNTO_COMA'
-    variables[t[1]] = t[3]
 
-def p_declaracionExpresion(t):
-    'declaracion : expresion'
-    t[0] = t[1]
+def p_instrucciones_evaluar(t):
+    'instruccion : REVALUAR CORIZQ expresion CORDER PTCOMA'
+    print('El valor de la expresión es: ' + str(t[3]))
 
-def p_expresionOperacion(t):
-    '''
-        expresion :  expresion SUMA expresion
-            | expresion RESTA expresion
-            | expresion MULTIPLICACION expresion
-            | expresion DIVISION expresion
-            | expresion POTENCIA expresion
-            | expresion MODULO expresion
-    '''
 
+def p_expresion_binaria(t):
+    '''expresion : expresion MAS expresion
+                  | expresion MENOS expresion
+                  | expresion POR expresion
+                  | expresion DIVIDIDO expresion'''
     if t[2] == '+':
         t[0] = t[1] + t[3]
     elif t[2] == '-':
@@ -251,139 +202,92 @@ def p_expresionOperacion(t):
         t[0] = t[1] * t[3]
     elif t[2] == '/':
         t[0] = t[1] / t[3]
-    elif t[2] == '%':
-        t[0] = t[1] % t[3]
-    elif t[2] == '**':
-        i = t[3]
-        t[0] = t[1]
-        while i > 1:
-            t[0] *= t[1]
-            i -= 1
 
-def p_expresionEnteroNegativo(t):
-    'expresion : RESTA expresion %prec NEGATIVO'
+
+def p_expresion_unitaria(t):
+    'expresion : MENOS expresion %prec UMENOS'
     t[0] = -t[2]
 
-def p_grupoExpresiones(t):
-    '''
-    expresion  : PARENTESIS_IZQUIERDO expresion PARENTESIS_DERECHO
-                | LLAVE_IZQUIERDA expresion LLAVE_DERECHA
-                | CORCHETE_IZQUIERDO expresion CORCHETE_DERECHO
-    '''
+
+def p_expresion_agrupacion(t):
+    'expresion : PARIZQ expresion PARDER'
     t[0] = t[2]
 
-def p_expresionLogica(t):
-    '''
-    expresion : expresion MENOR_QUE expresion
-        | expresion MAYOR_QUE expresion
-        | expresion MENOR_IGUAL expresion
-        | expresion MAYOR_IGUAL expresion
-        | expresion IGUAL expresion
-        | expresion DIFERENTE expresion
-        | PARENTESIS_IZQUIERDO expresion PARENTESIS_DERECHO MENOR_QUE PARENTESIS_IZQUIERDO expresion PARENTESIS_DERECHO
-        | PARENTESIS_IZQUIERDO expresion PARENTESIS_DERECHO MAYOR_QUE PARENTESIS_IZQUIERDO expresion PARENTESIS_DERECHO
-        | PARENTESIS_IZQUIERDO expresion PARENTESIS_DERECHO MENOR_IGUAL PARENTESIS_IZQUIERDO expresion PARENTESIS_DERECHO
-        | PARENTESIS_IZQUIERDO expresion PARENTESIS_DERECHO MAYOR_IGUAL PARENTESIS_IZQUIERDO expresion PARENTESIS_DERECHO
-        | PARENTESIS_IZQUIERDO expresion PARENTESIS_DERECHO IGUAL PARENTESIS_IZQUIERDO expresion PARENTESIS_DERECHO
-        | PARENTESIS_IZQUIERDO expresion PARENTESIS_DERECHO DIFERENTE PARENTESIS_IZQUIERDO expresion PARENTESIS_DERECHO
-    '''
-    if t[2] == "<<": t[0] = t[1] < t[3]
-    elif t[2] == ">>": t[0] = t[1] > t[3]
-    elif t[2] == "<::": t[0] = t[1] <= t[3]
-    elif t[2] == ">::": t[0] = t[1] >= t[3]
-    elif t[2] == ":::": t[0] = t[1] is t[3]
-    elif t[2] == ":-:": t[0] = t[1] != t[3]
-    elif t[3] == "<<":
-        t[0] = t[2] < t[4]
-    elif t[2] == ">>":
-        t[0] = t[2] > t[4]
-    elif t[3] == "<::":
-        t[0] = t[2] <= t[4]
-    elif t[3] == ">::":
-        t[0] = t[2] >= t[4]
-    elif t[3] == ":::":
-        t[0] = t[2] is t[4]
-    elif t[3] == ":-:":
-        t[0] = t[2] != t[4]
 
-def p_expresionBooleana(t):
-    '''
-    expresion   : expresion Y expresion
-                | expresion O expresion
-                | expresion NEGAR expresion
-                | PARENTESIS_IZQUIERDO expresion Y expresion PARENTESIS_DERECHO
-                | PARENTESIS_IZQUIERDO expresion O expresion PARENTESIS_DERECHO
-                | PARENTESIS_IZQUIERDO expresion NEGAR expresion PARENTESIS_DERECHO
-    '''
-    if t[2] == "yy":
-        t[0] = t[1] and t[3]
-    elif t[2] == "oo":
-        t[0] = t[1] or t[3]
-    elif t[2] == "neg":
-        t[0] =  t[1] is not t[3]
-    elif t[3] == "yy":
-        t[0] = t[2] and t[4]
-    elif t[3] == "oo":
-        t[0] = t[2] or t[4]
-    elif t[3] == "neg":
-        t[0] =  t[2] is not t[4]
-
-def p_expresionEntero(t):
-    'expresion : ENTERO'
+def p_expresion_number(t):
+    '''expresion    : ENTERO
+                    | DECIMAL'''
     t[0] = t[1]
 
-def p_expresionCadena(t):
-    'expresion : COMILLA_DOBLE expresion COMILLA_DOBLE'
-    t[0] = t[2]
 
-def p_expresionIdentificador(t):
-    'expresion : IDENTIFICADOR'
-    try:
-        t[0] = variables[t[1]]
-    except LookupError:
-        # global resultado_parser
-        mensaje = "En la linea {} -> \"{}\" no definido.".format(t.lexer.lineno,t[1])
-        # resultado_parser.append(mensaje)
-        print(mensaje)
-        t[0] = 0
+def p_expresion_condicional(t):
+    '''expresion : expresion MENOR expresion
+                | expresion MAYOR expresion
+                | expresion MENORIGUAL expresion
+                | expresion MAYORIGUAL expresion
+                | expresion IGUAL expresion
+                | expresion DISTINTO expresion
+                | expresion ASIGNACION expresion'''
+
+    t[0] = t[1] < t[3]
+    if t[2] == '<':
+        t[0] = t[1] < t[3]
+    elif t[2] == '>':
+        t[0] = t[1] > t[3]
+    elif t[2] == '<=':
+        t[0] = t[1] <= t[3]
+    elif t[2] == '>=':
+        t[0] = t[1] >= t[3]
+    elif t[2] == '==':
+        t[0] = t[1] == t[3]
+    elif t[2] == '!=':
+        t[0] = t[1] != t[3]
+    elif t[2] == '=':
+        t[0] = t[3]
+
 
 def p_error(t):
-    global resultado_parser
-    if t:
-        mensaje = "En la linea {} -> Error sintactico de tipo {} en el valor {}".format(str(t.lexer.lineno), str(t.type), str(t.value))
-        print(mensaje)
-    else:
-        mensaje = "En la linea {} -> Error sintactico {}".format(str(t.lexer.lineno), t)
-        print(mensaje)
-    resultado_parser.append(mensaje)
+    print("Error sintáctico en '%s'" % t.value)
 
+
+def t_ID(t):
+    r'[a-zA-Z_][a-zA-Z_0-9]*'
+    t.type = palabrasReservadas.get(t.value, 'ID')  # Verificar palabras reservadas
+    return t
+
+
+def p_instrucciones_lista(t):
+    '''
+    instrucciones    : instruccion instrucciones
+                      | instruccion
+    '''
+    pass  # Esta regla no hace nada por ahora
+
+
+def p_instruccion(t):
+    '''
+    instruccion : ID '=' expresion PTCOMA
+    '''
+    t[0] = t[3]  # Almacenar el valor de la expresión en la variable asignada
+    print('El valor de ' + t[1] + ' es: ' + str(t[0]))  # Imprimir el valor de la variable asignada
+
+    # Escribir el valor de x en un archivo .txt
+    if t[1] == 'x':
+        t[0] = t[3]
+        escribir_archivo('El valor de x es:', str(t[0]))
+
+
+def escribir_archivo(nombre_archivo, contenido):
+    with open(nombre_del_archivo, 'w') as archivo:
+        archivo.write(contenido)
+
+nombre_del_archivo = "c:/Users/user/Downloads/interpreteSoftware/interpreteSoftware/entrada.txt"  
+
+import ply.yacc as yacc
 parser = yacc.yacc()
 
-def ejecucion_linea_por_linea(codigo):
-    global resultado_gramatica
-    resultado_parser.clear()
 
-    for lineaCodigo in codigo.splitlines():
-        if lineaCodigo:
-            resultado = parser.parse(lineaCodigo)
-            if resultado:
-                resultado_parser.append(str(resultado))
-        else: print("linea de codigo vacia")
-
-    # print("result: ", resultado_parser)
-    print('\n'.join(resultado_parser))
-    return resultado_parser
-
-'''nombreArchivo =  'code.slx'
-ruta = str(os.getcwd())+"/archivos/"+nombreArchivo
-fp = codecs.open(ruta,"r","utf-8")
-codigoArchivo = fp.read()
-fp.close()
-
-analizadorLexico = lex.lex()'''
-
-data=input(5+7)
-lexer = lex.lex()
-lexer.input(data)
-token=lexer.token()
-print(format(str(token.value)))
+f = open(nombre_del_archivo, "r")
+input = f.read()
+print(input)
+parser.parse(input)
