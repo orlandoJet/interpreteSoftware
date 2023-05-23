@@ -1,0 +1,9 @@
+Evaluar[1+1];
+Evaluar[1+1*2];
+Evaluar[-(1+1*6/3-5+7)];
+Evaluar[-(1+1*6/3-5+1*-2)];
+Evaluar[-(16+145)];   
+Evaluar [9 < 12];
+Evaluar [15 >= 10];
+Evaluar [5.5 != 5.5];  
+
