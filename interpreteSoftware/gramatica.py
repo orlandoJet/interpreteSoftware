@@ -1,4 +1,3 @@
-
 import ply.lex as lex
 
 palabrasReservadas = {
@@ -16,15 +15,6 @@ palabrasReservadas = {
     "devol": "return" #return
 }
 
-
-#def t_ID(t): 
-#    r'[a-zA-Z_][a-zA-Z_0-9]*' 
-#    t.type = palabrasReservadas.get (t.value,'ID') # Verificar palabras reservadas 
-#    return t
-    
-
-
-
 literales = (
     "CIERTO",
     "FALSO"
@@ -36,7 +26,7 @@ tiposDeToken = (
     "LITERAL"
 )
 
-tokens = (
+tokens = [
     'ID',
     'IMPRIMIR',
     'LEER'
@@ -69,7 +59,8 @@ tokens = (
     'IGUAL',
     'DISTINTO',
     'IDENTIFICADOR'  # Nuevo token para identificadores
-)
+]+ list(palabrasReservadas.values())
+
 
 # Tokens
 t_REVALUAR  = r'Evaluar'
@@ -135,8 +126,6 @@ def t_RETORNAR(t):
     r'devol'
     return t
 
-
-
 def t_DECIMAL(t):
     r'\d+\.\d+'
     try:
@@ -179,10 +168,6 @@ precedence = (
     ('left','MENOR','MAYOR','MENORIGUAL','MAYORIGUAL','IGUAL','DISTINTO'),
     ('right','UMENOS'),
     )
-# Definición de la gramática
-def p_instrucciones_lista(t):
-    '''instrucciones    : instruccion instrucciones
-                        | instruccion '''
 
 def p_instrucciones_evaluar(t):
     'instruccion : REVALUAR CORIZQ expresion CORDER PTCOMA'
@@ -232,6 +217,25 @@ def p_expresion_condicional(t):
 
 def p_error(t):
     print("Error sintáctico en '%s'" % t.value)
+
+def t_ID(t):
+    r'[a-zA-Z_][a-zA-Z_0-9]*'
+    t.type = palabrasReservadas.get(t.value, 'ID')  # Verificar palabras reservadas
+    return t
+
+def p_instrucciones_lista(t):
+    '''
+    instrucciones    : instruccion instrucciones
+                      | instruccion
+    '''
+    pass  # Esta regla no hace nada por ahora
+
+def p_instruccion(t):
+    '''
+    instruccion : ID '=' expresion PTCOMA
+    '''
+    t[0] = t[3]  # Almacenar el valor de la expresión en la variable asignada
+    print('El valor de ' + t[1] + ' es: ' + str(t[0]))  # Imprimir el valor de la variable asignada
 
 import ply.yacc as yacc
 parser = yacc.yacc()
