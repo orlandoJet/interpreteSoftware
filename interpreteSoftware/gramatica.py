@@ -1,293 +1,179 @@
+import sys 
+sys.path.insert(0,"../..")
+
+if sys.version_info[0] >= 3:
+    raw_input = input
+
 import ply.lex as lex
-
-palabrasReservadas = {
-    "ver": "print",  # print
-    "obt": "input",  # input
-    "es": "if",  # if
-    "deloc": "else",  # else
-    "yy": "and",  # and
-    "oo": "or",  # or
-    "negar": "not",  # not
-    "ciclom": "while",  # while
-    "ciclop": "for",  # for
-    "func": "def",  # def
-    "fin": "break",  # break
-    "devol": "return"  # return
-}
-
-literales = (
-    "CIERTO",
-    "FALSO"
-)
-
-tiposDeToken = (
-    "ID",
-    "PALABRA_RESERVADA",
-    "LITERAL"
-)
-
-tokens = [
-    'ID',
-    'IMPRIMIR',
-    'LEER',
-    'SI',
-    'SINO',
-    'Y',
-    'O',
-    'NEGAR',
-    'MIESTRAS',
-    'FUNCION',
-    'BREAK',
-    'RETORNAR',
-    'REVALUAR',
-    'PARIZQ',
-    'PARDER',
-    'CORIZQ',
-    'CORDER',
-    'MAS',
-    'MENOS',
-    'POR',
-    'DIVIDIDO',
-    'DECIMAL',
-    'ENTERO',
-    'PTCOMA',
-    'MENOR',
-    'MAYOR',
-    'MENORIGUAL',
-    'MAYORIGUAL',
-    'IGUAL',
-    'ASIGNACION',
-    'DISTINTO',
-    'IDENTIFICADOR'
-] + list(palabrasReservadas.values())
-
-
-# Tokens
-t_REVALUAR = r'Evaluar'
-t_PARIZQ = r'\('
-t_PARDER = r'\)'
-t_CORIZQ = r'\['
-t_CORDER = r'\]'
-t_MAS = r'\+'
-t_MENOS = r'-'
-t_POR = r'\*'
-t_DIVIDIDO = r'/'
-t_PTCOMA = r';'
-t_MENOR = r'<'
-t_MAYOR = r'>'
-t_MENORIGUAL = r'<='
-t_MAYORIGUAL = r'>='
-t_IGUAL = r'=='
-t_ASIGNACION = r'='
-t_DISTINTO = r'!='
-
-
-def t_IMPRIMIR(t):
-    r'ver'
-    return t
-
-
-def t_LEER(t):
-    r'obt'
-    return t
-
-
-def t_SI(t):
-    r'es'
-    return t
-
-
-def t_SINO(t):
-    r'deloc'
-    return t
-
-
-def t_Y(t):
-    r'yy'
-    return t
-
-
-def t_O(t):
-    r'oo'
-    return t
-
-
-def t_NEGAR(t):
-    r'negar'
-    return t
-
-
-def t_MIESTRAS(t):
-    r'ciclom'
-    return t
-
-
-def t_FUNCION(t):
-    r'ciclop'
-    return t
-
-
-def t_BREAK(t):
-    r'fin'
-    return t
-
-
-def t_RETORNAR(t):
-    r'devol'
-    return t
-
-
-def t_DECIMAL(t):
-    r'\d+\.\d+'
-    try:
-        t.value = float(t.value)
-    except ValueError:
-        print("Valor flotante demasiado grande %d", t.value)
-        t.value = 0
-    return t
-
-
-def t_ENTERO(t):
-    r'\d+'
-    try:
-        t.value = int(t.value)
-    except ValueError:
-        print("Valor entero demasiado grande %d", t.value)
-        t.value = 0
-    return t
-
-
-# Caracteres ignorados
-t_ignore = " \t"
-
-
-def t_newline(t):
-    r'\n+'
-    t.lexer.lineno += t.value.count("\n")
-
-
-def t_error(t):
-    print("Caracter invalido '%s'" % t.value[0])
-    t.lexer.skip(1)
-
-
-# Construyendo el analizador léxico
-lexer = lex.lex()
-
-
-# Asociación de operadores y precedencia
-precedence = (
-    ('left', 'MAS', 'MENOS'),
-    ('left', 'POR', 'DIVIDIDO'),
-    ('left', 'MENOR', 'MAYOR', 'MENORIGUAL', 'MAYORIGUAL', 'IGUAL', 'DISTINTO', 'ASIGNACION'),
-    ('right', 'UMENOS'),
-)
-
-
-def p_instrucciones_evaluar(t):
-    'instruccion : REVALUAR CORIZQ expresion CORDER PTCOMA'
-    print('El valor de la expresión es: ' + str(t[3]))
-
-
-def p_expresion_binaria(t):
-    '''expresion : expresion MAS expresion
-                  | expresion MENOS expresion
-                  | expresion POR expresion
-                  | expresion DIVIDIDO expresion'''
-    if t[2] == '+':
-        t[0] = t[1] + t[3]
-    elif t[2] == '-':
-        t[0] = t[1] - t[3]
-    elif t[2] == '*':
-        t[0] = t[1] * t[3]
-    elif t[2] == '/':
-        t[0] = t[1] / t[3]
-
-
-def p_expresion_unitaria(t):
-    'expresion : MENOS expresion %prec UMENOS'
-    t[0] = -t[2]
-
-
-def p_expresion_agrupacion(t):
-    'expresion : PARIZQ expresion PARDER'
-    t[0] = t[2]
-
-
-def p_expresion_number(t):
-    '''expresion    : ENTERO
-                    | DECIMAL'''
-    t[0] = t[1]
-
-
-def p_expresion_condicional(t):
-    '''expresion : expresion MENOR expresion
-                | expresion MAYOR expresion
-                | expresion MENORIGUAL expresion
-                | expresion MAYORIGUAL expresion
-                | expresion IGUAL expresion
-                | expresion DISTINTO expresion
-                | expresion ASIGNACION expresion'''
-
-    t[0] = t[1] < t[3]
-    if t[2] == '<':
-        t[0] = t[1] < t[3]
-    elif t[2] == '>':
-        t[0] = t[1] > t[3]
-    elif t[2] == '<=':
-        t[0] = t[1] <= t[3]
-    elif t[2] == '>=':
-        t[0] = t[1] >= t[3]
-    elif t[2] == '==':
-        t[0] = t[1] == t[3]
-    elif t[2] == '!=':
-        t[0] = t[1] != t[3]
-    elif t[2] == '=':
-        t[0] = t[3]
-
-
-def p_error(t):
-    print("Error sintáctico en '%s'" % t.value)
-
-
-def t_ID(t):
-    r'[a-zA-Z_][a-zA-Z_0-9]*'
-    t.type = palabrasReservadas.get(t.value, 'ID')  # Verificar palabras reservadas
-    return t
-
-
-def p_instrucciones_lista(t):
-    '''
-    instrucciones    : instruccion instrucciones
-                      | instruccion
-    '''
-    pass  # Esta regla no hace nada por ahora
-
-
-def p_instruccion(t):
-    '''
-    instruccion : ID '=' expresion PTCOMA
-    '''
-    t[0] = t[3]  # Almacenar el valor de la expresión en la variable asignada
-    print('El valor de ' + t[1] + ' es: ' + str(t[0]))  # Imprimir el valor de la variable asignada
-
-    # Escribir el valor de x en un archivo .txt
-    if t[1] == 'x':
-        t[0] = t[3]
-        escribir_archivo('El valor de x es:', str(t[0]))
-
-
-def escribir_archivo(nombre_archivo, contenido):
-    with open(nombre_del_archivo, 'w') as archivo:
-        archivo.write(contenido)
-
-nombre_del_archivo = "c:/Users/user/Downloads/interpreteSoftware/interpreteSoftware/entrada.txt"  
-
 import ply.yacc as yacc
-parser = yacc.yacc()
+import os 
+
+class Parser(object):
+    
+    tokens = ()
+    precedence = ()
+
+    def __init__(self, **kw): 
+        self.debug = kw.get('debug',0)
+        self.names = { } 
+
+        try:
+            modname = os.path.split(os.path.splitext(__file__)[0])[1] + "_" + self.__class__.__name__
+        except:
+            modname = "parser"+"_"+self.__class__.__name__
+        self.debugfile = modname + ".dbg"
+        self.tabmodule = modname + "_" + "parsetab"
+        #print self.debugfile, self.tabmodule
+
+        #Build the lexer and parser
+        lex.lex(module=self, debug=self.debug)
+        yacc.yacc(module=self,
+                    debug=self.debug,
+                    debugfile=self.debugfile,
+                    tabmodule=self.tabmodule)
+
+    def run(self):
+        while 1:
+            try:
+                s = raw_input('calc > ')
+            except EOFError:
+                break
+            if not s: continue
+            yacc.parse(s)
+
+class Calc(Parser):
+    tokens = [
+        'NAME',
+        'NUMBER',
+        'PLUS',
+        'MINUS',
+        'EXP',
+        'TIMES',
+        'DIVIDE',
+        'EQUALS',
+        'LPAREN',
+        'RPAREN',
+        'MENOR',
+        'MAYOR',
+        'MENORIGUAL',
+        'MAYORIGUAL',
+        'IGUAL',
+        'DISTINTO'
+    ]
+
+    #tokens
+    t_plus      = r'\+'
+    t_MINUS     = r'-'
+    t_EXP       = r'\*\*'
+    t_TIMES     = r'\*'
+    t_DIVIDE    = r'/'
+    t_EQUALS    = r'='
+    t_LPAREN    = r'\('
+    t_RPAREN    = r'\)'
+    t_NAME      = r'[a-zA-Z_][a-aA-Z0-9_]*'
+    t_SI        = r'si'
+
+    def t_NUMBER(self, t):
+        r'\d+'
+        try:
+            t.value = int(t.value)
+        except ValueError:
+            print("Integer value too large %s" % t.value)
+            t.value = 0
+            
+        return t
+    t_ignore = " \t"
+
+    def t_newline(self, t):
+        r'\n+'
+        t.lexer.lineno += t.value.count("\n")
+
+    def t_error(self, t):
+        print("Illegal character '%s'" % t.value[0])
+        t.lexer.skip(1)
+
+    #parsing rules
+
+    precedence = (
+        ('left','PLUS','MINUS'),
+        ('left', 'TIMES', 'DIVIDE'),
+        ('left', 'EXP'),
+        ('right','UMINUS'),
+    )
+    def p_statement_assign(self, p):
+        'statement : NAME EQUALS expression'
+        self.names[p[1]]  = p[3]
+
+    def p_statement_expr(self, p):
+        'statement : expression'
+        print(p[1])
+
+    def p_expression_binop(self, p):
+        """
+        expression : expression PLUS expression
+                    | expression MINUS expression
+                    | expression TIMES expression
+                    | expression DIVIDE expression
+                    | expression EXP expression
+        """
+        
+        if p[2] == '+' : p[0] = p[1] + p[3]
+        elif p[2] == '-' : p[0] = p[1] - p[3]
+        elif p[2] == '*' : p[0] = p[1] * p[3]
+        elif p[2] == '/' : p[0] = p[1] / p[3]
+        elif p[2] == '**' : p[0] = p[1] ** p[3]
+
+    def p_expression_condicional(self, p):
+        """
+        expression : expression MENOR expression
+                    | expression MAYOR expression
+                    | expression MENORIGUAL expression
+                    | expression MAYORIGUAL expression
+                    | expression IGUAL expression 
+                    | expression DISTINTO expression
+
+        """
+        
+        if p[2] == '<': p[0] = p[1] < p[3]
+        elif p[2] == '>': p[0] = p[1] > p[3]
+        elif p[2] == '<=': p[0] = p[1] <= p[3]
+        elif p[2] == '>=': p[0] = p[1] >= p[3]
+        elif p[2] == '==': p[0] = p[1] == p[3]
+        elif p[2] == '!=': p[0] = p[1] != p[3]
+        
+
+    def p_expression_uminus(self, p):
+        'expression : MINUS expression %prec UMINUS'
+        p[0]= -p[2]
+
+    def p_expression_group(self, p):
+        'expression : LPAREN expression RPAREN'
+        p[0] = p[2]
+
+    def p_expression_number(self, p):
+        'expression : NUMBER'
+        p[0] = p[1]
+
+    def p_expression_name(self, p):
+        'expression : NAME'
+        try:
+            p[0] = self.names[p[1]]
+        except LookupError:
+            print("Undefined name '%s'" % p[1])
+            p[0] = 0
+
+    def p_expression_if(self, p):
+        'expression : SI expression'
+        print("Conditional if statement") 
+        p[0] = p[1] > p[2] 
+
+    def p_error(self, p):
+        if p:
+            print("Syntax error at '%s'" % p.value)
+        else:
+            print("Syntax error at EOF")
 
 
-f = open(nombre_del_archivo, "r")
-input = f.read()
-print(input)
-parser.parse(input)
+if __name__ == '__main__':
+    calc = Calc()
+    calc.run()

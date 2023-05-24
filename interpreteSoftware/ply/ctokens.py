@@ -116,9 +116,9 @@ t_CHARACTER = r'(L)?\'([^\\\n]|(\\.))*?\''
 
 # Comment (C-Style)
 def t_COMMENT(t):
-    r'/\*(.|\n)*?\*/'
-    t.lexer.lineno += t.value.count('\n')
-    return t
+    r'\#.*'
+    pass
+    # No return value. Token discarded
 
 # Comment (C++-Style)
 def t_CPPCOMMENT(t):
